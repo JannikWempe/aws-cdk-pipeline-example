@@ -31,8 +31,15 @@ export class CdkPipelinePipelineStack extends Stack {
       })
     })
 
-    pipeline.addApplicationStage(new CdkPipelineStage(this, 'Staging', {
-      env: { account: '658347763935', region: 'eu-central-1' }
+    const stagingStage = pipeline.addApplicationStage(new CdkPipelineStage(this, 'Staging', {
+      env: { account: '658347763935', region: 'eu-central-1' },
+    }))
+    stagingStage.addManualApprovalAction({
+      actionName: 'PromoteToProd'
+    })
+
+    pipeline.addApplicationStage(new CdkPipelineStage(this, 'Prod', {
+      env: { account: '658347763935', region: 'eu-central-1' },
     }))
   }
 
