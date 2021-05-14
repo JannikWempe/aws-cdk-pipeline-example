@@ -38,6 +38,7 @@ export class CdkPipelinePipelineStack extends Stack {
 
     // replace with actual integration tests
     stagingStage.addActions(new ShellScriptAction({
+      runOrder: stagingStage.nextSequentialRunOrder(),
       actionName: 'IntegrationTesting',
       useOutputs: {
         ENDPOINT_URL: pipeline.stackOutput(stagingApp.urlOutput)
@@ -48,6 +49,7 @@ export class CdkPipelinePipelineStack extends Stack {
     }))
 
     stagingStage.addManualApprovalAction({
+      runOrder: stagingStage.nextSequentialRunOrder(),
       actionName: 'PromoteToProd'
     })
 
