@@ -1,7 +1,7 @@
 import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import { Construct, SecretValue, Stack, StackProps } from "@aws-cdk/core";
-import { CdkPipeline, SimpleSynthAction } from '@aws-cdk/pipelines';
+import {CdkPipeline, ShellScriptAction, SimpleSynthAction} from '@aws-cdk/pipelines';
 import {CdkPipelineStage} from "./cdk-pipeline-stage";
 
 export class CdkPipelinePipelineStack extends Stack {
@@ -27,13 +27,26 @@ export class CdkPipelinePipelineStack extends Stack {
       synthAction: SimpleSynthAction.standardNpmSynth({
         sourceArtifact,
         cloudAssemblyArtifact,
-        buildCommand: 'npm run build'
+        buildCommand: 'npm run test && npm run build'
       })
     })
 
-    const stagingStage = pipeline.addApplicationStage(new CdkPipelineStage(this, 'Staging', {
+    const stagingApp = new CdkPipelineStage(this, 'Staging', {
       env: { account: '658347763935', region: 'eu-central-1' },
+    });
+    const stagingStage = pipeline.addApplicationStage(stagingApp)
+
+    // replace with actual integration tests
+    stagingStage.addActions(new ShellScriptAction({
+      actionName: 'IntegrationTesting',
+      useOutputs: {
+        ENDPOINT_URL: pipeline.stackOutput(stagingApp.urlOutput)
+      },
+      commands: [
+        'curl -Ssf $ENDPOINT_URL'
+      ]
     }))
+
     stagingStage.addManualApprovalAction({
       actionName: 'PromoteToProd'
     })
